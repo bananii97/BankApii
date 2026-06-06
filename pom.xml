@@ -13,10 +13,27 @@
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>BankApii</name>
+
     <description>BankApii</description>
+
+    <modules>
+        <module>application</module>
+        <module>user</module>
+    </modules>
 
     <properties>
         <java.version>21</java.version>
+        <postgresql.version>42.7.2</postgresql.version>
     </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.postgresql</groupId>
+                <artifactId>postgresql</artifactId>
+                <version>${postgresql.version}</version>
+                <scope>runtime</scope> </dependency>
+        </dependencies>
+    </dependencyManagement>
 
 </project>
