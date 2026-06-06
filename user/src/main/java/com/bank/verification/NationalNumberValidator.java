@@ -9,12 +9,10 @@ import java.time.format.DateTimeFormatter;
 @Component
 public class NationalNumberValidator {
 
-    public void passed(UserRequestDto user) {
-        if (!(genderMatchesIdentificationNumber(user)
+    public boolean passed(UserRequestDto user) {
+        return genderMatchesIdentificationNumber(user)
                 && identificationNumberStartsWithDateOfBirth(user)
-                && identificationNumberWeightIsCorrect(user))) {
-            throw new InvalidNationalNumberException("Invalid National Number");
-        }
+                && identificationNumberWeightIsCorrect(user);
     }
 
     private boolean genderMatchesIdentificationNumber(UserRequestDto user) {
