@@ -1,8 +1,7 @@
-package com.bank.address.mapper;
+package com.bank.address;
 
 import com.bank.address.dto.AddressRequestDto;
 import com.bank.address.dto.AddressResponseDto;
-import com.bank.address.entity.Address;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass

@@ -1,4 +1,4 @@
-package com.bank.address.entity;
+package com.bank.address;
 
 import com.bank.base.AuditableEntity;
 import jakarta.persistence.*;

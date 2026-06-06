@@ -1,4 +1,14 @@
 package com.bank.identity_card.dto;
 
-public class IdentityCardResponseDto {
+import lombok.Builder;
+
+import java.time.LocalDate;
+
+@Builder
+public record IdentityCardResponseDto(
+        String identityCardNumber,
+        String issuePlace,
+        String issuingAuthority,
+        LocalDate validUtil
+) {
 }

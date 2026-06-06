@@ -1,6 +1,6 @@
 package com.bank.user.jpa;
 
-import com.bank.address.entity.Address;
+import com.bank.address.Address;
 import com.bank.base.AuditableEntity;
 import com.bank.identity_card.IdentityCard;
 import com.bank.user.enums.Gender;
@@ -10,11 +10,13 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDate;
 
 @AllArgsConstructor
 @NoArgsConstructor
+@SuperBuilder
 @Getter
 @Setter
 @Entity
