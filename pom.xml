@@ -19,6 +19,7 @@
     <modules>
         <module>application</module>
         <module>user</module>
+        <module>common</module>
     </modules>
 
     <properties>

@@ -1,0 +1,24 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog/1.9"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/1.9
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-1.9.xsd">
+
+    <changeSet id="004-add-address-and-identity-card-fk" author="kbanach">
+        <addColumn tableName="person">
+            <column name="address_id" type="bigint">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="identity_card_id" type="bigint">
+                <constraints nullable="false" unique="true"/>
+            </column>
+        </addColumn>
+
+        <addForeignKeyConstraint baseTableName="person" baseColumnNames="address_id" constraintName="fk_person_address"
+                                 referencedTableName="address"
+                                 referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="person" baseColumnNames="identity_card_id" constraintName="fk_person-identity-card"
+                                 referencedTableName="identity_card"
+                                 referencedColumnNames="id"/>
+    </changeSet>
+</databaseChangeLog>
