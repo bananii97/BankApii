@@ -13,6 +13,7 @@ import com.bank.verification.NationalNumberValidator;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -44,12 +45,12 @@ public class UserService {
     public void validateEmailNadNationalNumber(UserRequestDto dto) {
         if(userRepository.findByEmail(dto.email()).isPresent()) {
             log.warn("Validation: email already exists for user with email: {} ", dto.email());
-            throw new UserAlreadyException("User with this email: " + dto.email() + " already exists");
+            throw new UserAlreadyException("User with this email: " + dto.email() + " already exists", HttpStatus.CONFLICT);
         }
 
         if(!nationalNumberValidator.passed(dto)){
             log.warn("Validation: national number is incorrect");
-            throw new InvalidNationalNumberExceptions("National number is incorrect");
+            throw new InvalidNationalNumberExceptions("National number is incorrect", HttpStatus.BAD_REQUEST);
         }
     }
 }

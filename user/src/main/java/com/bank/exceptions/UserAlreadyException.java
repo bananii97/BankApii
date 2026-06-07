@@ -1,7 +1,10 @@
 package com.bank.exceptions;
 
-public class UserAlreadyException extends RuntimeException {
-    public UserAlreadyException(String message) {
-        super(message);
+import com.bank.BaseBusinessException;
+import org.springframework.http.HttpStatus;
+
+public class UserAlreadyException extends BaseBusinessException {
+    public UserAlreadyException(String message, HttpStatus httpStatus) {
+        super(message, httpStatus);
     }
 }
