@@ -28,16 +28,17 @@ public class UserService {
     public UserResponseDto registry(UserRequestDto dto) {
         log.info("Validation: process starting for user with email: {}", dto.email());
         User user = UserMapper.fromRequest(dto);
-        validateEmailNadNationalNumber(dto);
-        user.setGender(changeGender(dto.nationalNumber()));
+        user.setGender(checkGender(dto.nationalNumber()));
+
         user.setStatus(UserStatus.PENDING_VERIFICATION);
+        validateEmailNadNationalNumber(dto);
 
         userRepository.save(user);
         log.info("Validation successful: process finished successfully for email: {} ", dto.email());
         return new UserResponseDto();
     }
 
-    public Gender changeGender(String nationalNumber) {
+    public Gender checkGender(String nationalNumber) {
         int genderDigit = nationalNumber.charAt(9);
         return (genderDigit % 2 == 0) ? Gender.FEMALE : Gender.MALE;
     }

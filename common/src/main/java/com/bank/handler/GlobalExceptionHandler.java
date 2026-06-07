@@ -1,4 +1,4 @@
-package com.bank;
+package com.bank.handler;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
