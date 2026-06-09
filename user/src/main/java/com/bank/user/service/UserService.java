@@ -22,7 +22,7 @@ import org.springframework.stereotype.Service;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final NationalNumberValidator  nationalNumberValidator;
+    private final NationalNumberValidator nationalNumberValidator;
 
     @Transactional
     public UserResponseDto registry(UserRequestDto dto) {
@@ -44,12 +44,12 @@ public class UserService {
     }
 
     public void validateEmailNadNationalNumber(UserRequestDto dto) {
-        if(userRepository.findByEmail(dto.email()).isPresent()) {
+        if (userRepository.findByEmail(dto.email()).isPresent()) {
             log.warn("Validation: email already exists for user with email: {} ", dto.email());
             throw new UserAlreadyException("User with this email: " + dto.email() + " already exists", HttpStatus.CONFLICT);
         }
 
-        if(!nationalNumberValidator.passed(dto)){
+        if (!nationalNumberValidator.passed(dto)) {
             log.warn("Validation: national number is incorrect");
             throw new InvalidNationalNumberExceptions("National number is incorrect", HttpStatus.BAD_REQUEST);
         }
