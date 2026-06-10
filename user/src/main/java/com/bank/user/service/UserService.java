@@ -54,4 +54,12 @@ public class UserService {
             throw new InvalidNationalNumberExceptions("National number is incorrect", HttpStatus.BAD_REQUEST);
         }
     }
+
+    public UserResponseDto getPersonalData(long id){
+        log.info("Get personal data for user with id: {} ", id);
+        User user = userRepository.findByIdOrThrowWhenIdNotExists(id);
+        UserResponseDto userResponseDto = UserMapper.fromEntityToPersonalData(user);
+        log.info("Get personal data for user with id: {} correct ", id);
+        return userResponseDto;
+    }
 }

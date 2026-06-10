@@ -21,4 +21,10 @@ public class UserController {
         UserResponseDto returnedUser = userService.registry(userRequestDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(returnedUser);
     }
+
+    @GetMapping("/me")
+    public ResponseEntity<UserResponseDto> me(@PathVariable Long id) {
+        UserResponseDto returnedUser = userService.getPersonalData(id);
+        return ResponseEntity.status(HttpStatus.OK).body(returnedUser);
+    }
 }
