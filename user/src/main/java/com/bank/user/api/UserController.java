@@ -1,5 +1,6 @@
 package com.bank.user.api;
 
+import com.bank.RegistrationResponseDto;
 import com.bank.user.jpa.dto.UserRequestDto;
 import com.bank.user.jpa.dto.UserResponseDto;
 import com.bank.user.service.UserService;
@@ -17,14 +18,20 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping("/registry")
-    public ResponseEntity<UserResponseDto> registry(@Valid @RequestBody UserRequestDto userRequestDto) {
-        UserResponseDto returnedUser = userService.registry(userRequestDto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(returnedUser);
+    public ResponseEntity<RegistrationResponseDto> registry(@Valid @RequestBody UserRequestDto userRequestDto) {
+        RegistrationResponseDto registrationResponseDto = userService.registry(userRequestDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(registrationResponseDto);
     }
 
-    @GetMapping("/me")
+    @GetMapping("/me/{id}")
     public ResponseEntity<UserResponseDto> me(@PathVariable Long id) {
         UserResponseDto returnedUser = userService.getPersonalData(id);
         return ResponseEntity.status(HttpStatus.OK).body(returnedUser);
+    }
+
+    @GetMapping("/activation/{email}")
+    public ResponseEntity<String> activateUser(@PathVariable String email) {
+        userService.activateUser(email);
+        return  ResponseEntity.status(HttpStatus.OK).body("User with email: " + email + " has been activated");
     }
 }

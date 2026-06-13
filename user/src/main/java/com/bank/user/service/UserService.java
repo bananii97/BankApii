@@ -1,5 +1,7 @@
 package com.bank.user.service;
 
+import com.bank.RegistrationResponseDto;
+import com.bank.config.RabbitMqUserConfig;
 import com.bank.exceptions.InvalidNationalNumberExceptions;
 import com.bank.exceptions.UserAlreadyException;
 import com.bank.user.UserMapper;
@@ -13,6 +15,7 @@ import com.bank.verification.NationalNumberValidator;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -23,9 +26,10 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final NationalNumberValidator nationalNumberValidator;
+    private final RabbitTemplate rabbitTemplate;
 
     @Transactional
-    public UserResponseDto registry(UserRequestDto dto) {
+    public RegistrationResponseDto registry(UserRequestDto dto) {
         log.info("Validation: process starting for user with email: {}", dto.email());
         User user = UserMapper.fromRequest(dto);
         user.setGender(checkGender(dto.nationalNumber()));
@@ -34,8 +38,30 @@ public class UserService {
         validateEmailNadNationalNumber(dto);
 
         userRepository.save(user);
+
+        rabbitTemplate.convertAndSend(
+                RabbitMqUserConfig.EXCHANGE_NAME,
+                RabbitMqUserConfig.ROUTING_USER_REGISTERED,
+                user.getEmail()
+        );
+
+        RegistrationResponseDto registrationResponseDto = returnRegistrationResponseDto(user);
+
         log.info("Validation successful: process finished successfully for email: {} ", dto.email());
-        return new UserResponseDto();
+        return registrationResponseDto;
+    }
+
+    public void activateUser(String email) {
+        log.info("Activation user: process starting for user with email: {}", email);
+        userRepository.findByEmailOrThrowWhenEmailNotExists(email);
+        log.info("Activation user successful: process finished successfully for email: {} ", email);
+    }
+
+    public RegistrationResponseDto returnRegistrationResponseDto(User user) {
+        String email = "email: " + user.getEmail();
+        UserStatus status = UserStatus.PENDING_VERIFICATION;
+        String message = "A verification code has been sent to the email address provided.";
+        return new RegistrationResponseDto(email,status,message);
     }
 
     public Gender checkGender(String nationalNumber) {
