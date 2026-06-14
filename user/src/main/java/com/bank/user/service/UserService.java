@@ -1,6 +1,7 @@
 package com.bank.user.service;
 
 import com.bank.RegistrationResponseDto;
+import com.bank.UserRegisteredEvent;
 import com.bank.config.RabbitMqUserConfig;
 import com.bank.exceptions.InvalidNationalNumberExceptions;
 import com.bank.exceptions.UserAlreadyException;
@@ -39,10 +40,11 @@ public class UserService {
 
         userRepository.save(user);
 
+        UserRegisteredEvent event = new  UserRegisteredEvent(user.getEmail());
         rabbitTemplate.convertAndSend(
                 RabbitMqUserConfig.EXCHANGE_NAME,
                 RabbitMqUserConfig.ROUTING_USER_REGISTERED,
-                user.getEmail()
+                event
         );
 
         RegistrationResponseDto registrationResponseDto = returnRegistrationResponseDto(user);

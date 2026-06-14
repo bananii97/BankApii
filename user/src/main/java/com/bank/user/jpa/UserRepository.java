@@ -1,6 +1,7 @@
 package com.bank.user.jpa;
 
 import com.bank.exceptions.EmailNotFoundExceptions;
+import com.bank.exceptions.UserNotFoundException;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.http.HttpStatus;
@@ -15,11 +16,13 @@ public interface UserRepository extends JpaRepository<User,Long> {
 
     default User findByEmailOrThrowWhenEmailNotExists(String email) {
         return findByEmail(email)
-                .orElseThrow(() -> new EmailNotFoundExceptions("Email: " + email + " not found", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new EmailNotFoundExceptions("Email: " + email + " not found",
+                        HttpStatus.NOT_FOUND));
     }
 
     default User findByIdOrThrowWhenIdNotExists(Long id) {
         return findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("User with id: " + id + " not found"));
+                .orElseThrow(() -> new UserNotFoundException("User with id: " + id + " not found",
+                        HttpStatus.BAD_REQUEST));
     }
 }

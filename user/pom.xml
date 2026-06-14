@@ -46,7 +46,8 @@
         <dependency>
             <groupId>com.bank</groupId>
             <artifactId>common</artifactId>
-            <version>${project.version}</version> </dependency>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 
     <properties>
