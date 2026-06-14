@@ -1,4 +1,4 @@
-package com.bank;
+package com.bank.handler;
 
 import org.springframework.http.HttpStatus;
 
