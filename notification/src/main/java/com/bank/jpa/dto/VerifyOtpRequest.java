@@ -1,5 +1,6 @@
-package com.bank;
+package com.bank.jpa.dto;
 
+import com.bank.enums.OtpType;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

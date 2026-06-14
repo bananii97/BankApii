@@ -1,5 +1,7 @@
-package com.bank;
+package com.bank.jpa;
 
+import com.bank.enums.OtpType;
+import com.bank.exceptions.OtpNotFoundException;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.http.HttpStatus;
 

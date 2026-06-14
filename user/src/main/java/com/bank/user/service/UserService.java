@@ -1,6 +1,6 @@
 package com.bank.user.service;
 
-import com.bank.RegistrationResponseDto;
+import com.bank.rabbit.RegistrationResponseDto;
 import com.bank.UserRegisteredEvent;
 import com.bank.config.RabbitMqUserConfig;
 import com.bank.exceptions.InvalidNationalNumberExceptions;
@@ -55,7 +55,8 @@ public class UserService {
 
     public void activateUser(String email) {
         log.info("Activation user: process starting for user with email: {}", email);
-        userRepository.findByEmailOrThrowWhenEmailNotExists(email);
+        User user = userRepository.findByEmailOrThrowWhenEmailNotExists(email);
+        user.setStatus(UserStatus.ACTIVE);
         log.info("Activation user successful: process finished successfully for email: {} ", email);
     }
 

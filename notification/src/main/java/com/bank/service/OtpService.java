@@ -1,6 +1,15 @@
-package com.bank;
+package com.bank.service;
 
+import com.bank.OtpVerifiedEvent;
+import com.bank.enums.OtpType;
+import com.bank.exceptions.CodeExpiredException;
+import com.bank.exceptions.OtpUsedException;
+import com.bank.jpa.OneTimePassword;
+import com.bank.jpa.OtpRepository;
+import com.bank.jpa.dto.VerifyOtpRequest;
+import com.bank.rabbit.RabbitMqOtpConfig;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -10,6 +19,7 @@ import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
+@Log4j2
 public class OtpService {
 
     private final RabbitTemplate rabbitTemplate;
@@ -34,6 +44,7 @@ public class OtpService {
     }
 
     public void verifyEmail(VerifyOtpRequest verifyOtpRequest) {
+        log.info("Verify email request received");
         String email = verifyOtpRequest.getEmail();
         String code = verifyOtpRequest.getCode();
         OtpType type = verifyOtpRequest.getOtp();
@@ -44,6 +55,7 @@ public class OtpService {
 
         otpRepository.save(otp);
         activeEmail(email);
+        log.info("Email verified successfully");
     }
 
     public boolean validate(OneTimePassword otp) {

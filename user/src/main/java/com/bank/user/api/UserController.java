@@ -1,6 +1,6 @@
 package com.bank.user.api;
 
-import com.bank.RegistrationResponseDto;
+import com.bank.rabbit.RegistrationResponseDto;
 import com.bank.user.jpa.dto.UserRequestDto;
 import com.bank.user.jpa.dto.UserResponseDto;
 import com.bank.user.service.UserService;

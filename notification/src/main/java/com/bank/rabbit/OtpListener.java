@@ -1,5 +1,7 @@
-package com.bank;
+package com.bank.rabbit;
 
+import com.bank.service.OtpService;
+import com.bank.UserRegisteredEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;

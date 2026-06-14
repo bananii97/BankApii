@@ -1,5 +1,6 @@
-package com.bank;
+package com.bank.jpa;
 
+import com.bank.enums.OtpType;
 import jakarta.persistence.*;
 import lombok.*;
 

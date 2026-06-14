@@ -1,4 +1,4 @@
-package com.bank;
+package com.bank.rabbit;
 
 import com.bank.user.enums.UserStatus;
 
