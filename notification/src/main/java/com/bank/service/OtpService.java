@@ -47,10 +47,10 @@ public class OtpService {
     }
 
     public void verifyEmail(VerifyOtpRequest verifyOtpRequest) {
-        log.info("Verify email request received for email: {}" , verifyOtpRequest.getEmail());
-        String email = verifyOtpRequest.getEmail();
-        String code = verifyOtpRequest.getCode();
-        OtpType type = verifyOtpRequest.getOtp();
+        log.info("Verify email request received for email: {}" , verifyOtpRequest.email());
+        String email = verifyOtpRequest.email();
+        String code = verifyOtpRequest.code();
+        OtpType type = verifyOtpRequest.otp();
 
 
         OneTimePassword otp = otpRepository.findByEmailAndOtpTypeOrElseThrow(email,type);
