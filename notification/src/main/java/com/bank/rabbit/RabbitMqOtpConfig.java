@@ -4,6 +4,7 @@ import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.TopicExchange;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -16,7 +17,7 @@ public class RabbitMqOtpConfig {
     public static final String ROUTING_USER_REGISTERED = "user.registered";
     public static final String ROUTING_OTP_VERIFIED = "otp.verified";
 
-    @Bean
+    @Bean("otpBankExchange")
     public TopicExchange bankExchange() {
         return new TopicExchange(EXCHANGE_NAME);
     }
@@ -27,7 +28,7 @@ public class RabbitMqOtpConfig {
     }
 
     @Bean
-    public Binding bindingUserRegistered(Queue userRegisteredQueue, TopicExchange bankExchange) {
+    public Binding bindingUserRegistered(Queue userRegisteredQueue, @Qualifier("userBankExchange") TopicExchange bankExchange) {
         return BindingBuilder.bind(userRegisteredQueue).to(bankExchange).with(ROUTING_USER_REGISTERED);
     }
 }
