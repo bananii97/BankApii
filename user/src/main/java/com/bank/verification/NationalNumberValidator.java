@@ -2,28 +2,32 @@ package com.bank.verification;
 
 import com.bank.user.enums.Gender;
 import com.bank.user.jpa.dto.UserRequestDto;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Component;
 
 import java.time.format.DateTimeFormatter;
 
 @Component
+@Log4j2
 public class NationalNumberValidator {
 
     public boolean passed(UserRequestDto user) {
+        log.info(" gender: " + genderMatchesIdentificationNumber(user) + " starts with date: " + identificationNumberStartsWithDateOfBirth(user) + " weight is:  " + identificationNumberWeightIsCorrect(user));
         return genderMatchesIdentificationNumber(user)
                 && identificationNumberStartsWithDateOfBirth(user)
                 && identificationNumberWeightIsCorrect(user);
     }
 
     private boolean genderMatchesIdentificationNumber(UserRequestDto user) {
-        Gender gender;
+        Gender userGender = user.gender();
+        Gender genderFromDate;
         if (Integer.parseInt(user.nationalNumber()
                 .substring(9, 10)) % 2 == 0) {
-            gender = Gender.FEMALE;
+            genderFromDate = Gender.FEMALE;
         } else {
-            gender = Gender.MALE;
+            genderFromDate = Gender.MALE;
         }
-        return gender == user.gender();
+        return genderFromDate == userGender;
     }
 
     private boolean identificationNumberStartsWithDateOfBirth(UserRequestDto user) {

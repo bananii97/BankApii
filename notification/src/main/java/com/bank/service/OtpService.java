@@ -1,6 +1,7 @@
 package com.bank.service;
 
 import com.bank.OtpVerifiedEvent;
+import com.bank.email.EmailSender;
 import com.bank.enums.OtpType;
 import com.bank.exceptions.CodeExpiredException;
 import com.bank.exceptions.InvalidOtpException;
@@ -14,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.http.HttpStatus;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
@@ -28,6 +30,7 @@ public class OtpService {
     private final RabbitTemplate rabbitTemplate;
     private final SecureRandom secureRandom;
     private final OtpRepository otpRepository;
+    private final EmailSender emailSender;
 
     public void generateAndSendOtp(String email) {
         int code = 100000 + secureRandom.nextInt(900000);
@@ -42,6 +45,9 @@ public class OtpService {
                 .createdAt(createdAt)
                 .expiresAt(expiresAt)
                 .build();
+
+        emailSender.sendMail(email,"a",String.valueOf(code));
+
 
         otpRepository.save(otp);
     }

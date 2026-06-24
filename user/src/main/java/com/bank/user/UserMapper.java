@@ -18,6 +18,7 @@ public class UserMapper {
                 .nationalNumber(dto.nationalNumber())
                 .birthDate(dto.birthDate())
                 .phoneNumber(dto.phoneNumber())
+                .gender(dto.gender())
                 .address(AddressMapper.fromRequest(dto.address()))
                 .identityCard(IdentityCardMapper.fromRequest(dto.identityCard()))
                 .build();
