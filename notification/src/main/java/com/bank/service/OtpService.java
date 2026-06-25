@@ -10,12 +10,11 @@ import com.bank.exceptions.OtpUsedException;
 import com.bank.jpa.OneTimePassword;
 import com.bank.jpa.OtpRepository;
 import com.bank.jpa.dto.VerifyOtpRequest;
-import com.bank.rabbit.RabbitMqOtpConfig;
+import com.bank.rabbit.config.RabbitMqOtpConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.http.HttpStatus;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;

@@ -2,7 +2,7 @@ package com.bank.user.service;
 
 import com.bank.rabbit.RegistrationResponseDto;
 import com.bank.UserRegisteredEvent;
-import com.bank.config.RabbitMqUserConfig;
+import com.bank.rabbit.config.RabbitMqUserConfig;
 import com.bank.exceptions.InvalidNationalNumberExceptions;
 import com.bank.exceptions.UserAlreadyException;
 import com.bank.user.UserMapper;
@@ -57,6 +57,7 @@ public class UserService {
         log.info("Activation user: process starting for user with email: {}", email);
         User user = userRepository.findByEmailOrThrowWhenEmailNotExists(email);
         user.setStatus(UserStatus.ACTIVE);
+        userRepository.save(user);
         log.info("Activation user successful: process finished successfully for email: {} ", email);
     }
 

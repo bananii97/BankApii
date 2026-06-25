@@ -1,4 +1,4 @@
-package com.bank.rabbit;
+package com.bank.rabbit.config;
 
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;

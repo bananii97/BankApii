@@ -1,7 +1,7 @@
 package com.bank.rabbit;
 
 import com.bank.OtpVerifiedEvent;
-import com.bank.config.RabbitMqUserConfig;
+import com.bank.rabbit.config.RabbitMqUserConfig;
 import com.bank.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
