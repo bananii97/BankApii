@@ -1,13 +1,16 @@
 package com.bank.service;
 
 import com.bank.OtpVerifiedEvent;
+import com.bank.email.EmailSender;
 import com.bank.enums.OtpType;
 import com.bank.exceptions.CodeExpiredException;
+import com.bank.exceptions.InvalidOtpException;
+import com.bank.exceptions.OtpFailedAttemptsExceptions;
 import com.bank.exceptions.OtpUsedException;
 import com.bank.jpa.OneTimePassword;
 import com.bank.jpa.OtpRepository;
 import com.bank.jpa.dto.VerifyOtpRequest;
-import com.bank.rabbit.RabbitMqOtpConfig;
+import com.bank.rabbit.config.RabbitMqOtpConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -16,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +29,7 @@ public class OtpService {
     private final RabbitTemplate rabbitTemplate;
     private final SecureRandom secureRandom;
     private final OtpRepository otpRepository;
+    private final EmailSender emailSender;
 
     public void generateAndSendOtp(String email) {
         int code = 100000 + secureRandom.nextInt(900000);
@@ -40,25 +45,44 @@ public class OtpService {
                 .expiresAt(expiresAt)
                 .build();
 
+        emailSender.sendMail(email,"a",String.valueOf(code));
+
+
         otpRepository.save(otp);
     }
 
     public void verifyEmail(VerifyOtpRequest verifyOtpRequest) {
-        log.info("Verify email request received");
-        String email = verifyOtpRequest.getEmail();
-        String code = verifyOtpRequest.getCode();
-        OtpType type = verifyOtpRequest.getOtp();
+        log.info("Verify email request received for email: {}" , verifyOtpRequest.email());
+        String email = verifyOtpRequest.email();
+        String code = verifyOtpRequest.code();
+        OtpType type = verifyOtpRequest.otp();
 
-        OneTimePassword otp = otpRepository.getRequiredOtpOrThrowOtpException(email, code, type);
-        validate(otp);
+
+        OneTimePassword otp = otpRepository.findByEmailAndOtpTypeOrElseThrow(email,type);
+        validate(otp,code);
         otp.setUsed(true);
 
         otpRepository.save(otp);
         activeEmail(email);
-        log.info("Email verified successfully");
+        log.info("Email verified successfully for email: {}", email);
     }
 
-    public boolean validate(OneTimePassword otp) {
+    public void registerFailedAttempts(OneTimePassword otp) {
+        log.info("Email verification code check for email: {}", otp.getEmail() );
+        otp.setFailedAttempts(otp.getFailedAttempts() + 1);
+        if(otp.getFailedAttempts() >= 3) {
+            otp.setBlockedAt(LocalDateTime.now());
+            log.info("The code has been blocked");
+        }
+        otpRepository.save(otp);
+        log.info("Code is correct for  email: {}", otp.getEmail());
+    }
+
+    public void validate(OneTimePassword otp, String code) {
+        log.info("Validating OTP request received for email: {}", otp.getEmail());
+        if(otp.getBlockedAt() != null){
+            throw new OtpFailedAttemptsExceptions("code blocked", HttpStatus.BAD_REQUEST);
+        }
         if (otp.getExpiresAt().isBefore(LocalDateTime.now())) {
             throw new CodeExpiredException("Code expired", HttpStatus.GONE);
         }
@@ -66,7 +90,12 @@ public class OtpService {
         if (otp.isUsed()) {
             throw new OtpUsedException("Otp is already used", HttpStatus.GONE);
         }
-        return true;
+
+        if(!Objects.equals(otp.getCode(),code)) {
+            registerFailedAttempts(otp);
+            throw new InvalidOtpException("Code is incorrect", HttpStatus.CONFLICT);
+        }
+        log.info("OTP validated successfully for  email: {}", otp.getEmail());
     }
 
     public void activeEmail(String email) {

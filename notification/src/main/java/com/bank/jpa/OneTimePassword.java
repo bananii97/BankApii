@@ -25,8 +25,9 @@ public class OneTimePassword {
 
     private LocalDateTime createdAt;
     private LocalDateTime expiresAt;
-
-    private boolean used = false;
+    private LocalDateTime blockedAt;
+    private int failedAttempts = 0;
+    private boolean used;
 
     @Builder
     private OneTimePassword(String code, String email, OtpType otpType,

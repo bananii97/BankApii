@@ -18,7 +18,19 @@
             <column name="otp_type" type="varchar(15)">
                 <constraints nullable="false"/>
             </column>
-            <column name="date_time" type="datetime">
+            <column name="created_at" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="used" type="boolean">
+                <constraints nullable="false"/>
+            </column>
+            <column name="expires_at" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="blocked_at" type="datetime">
+                <constraints nullable="true"/>
+            </column>
+            <column name="blocked" type="boolean">
                 <constraints nullable="false"/>
             </column>
         </createTable>

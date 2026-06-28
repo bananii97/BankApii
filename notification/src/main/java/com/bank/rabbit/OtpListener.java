@@ -1,5 +1,6 @@
 package com.bank.rabbit;
 
+import com.bank.rabbit.config.RabbitMqOtpConfig;
 import com.bank.service.OtpService;
 import com.bank.UserRegisteredEvent;
 import lombok.RequiredArgsConstructor;
