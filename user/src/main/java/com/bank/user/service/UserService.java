@@ -1,5 +1,7 @@
 package com.bank.user.service;
 
+import com.bank.address.AddressMapper;
+import com.bank.identity_card.IdentityCardMapper;
 import com.bank.rabbit.RegistrationResponseDto;
 import com.bank.UserRegisteredEvent;
 import com.bank.rabbit.config.RabbitMqUserConfig;
@@ -12,6 +14,7 @@ import com.bank.user.jpa.User;
 import com.bank.user.jpa.UserRepository;
 import com.bank.user.jpa.dto.UserRequestDto;
 import com.bank.user.jpa.dto.UserResponseDto;
+import com.bank.user.jpa.dto.UserUpdateRequestDto;
 import com.bank.verification.NationalNumberValidator;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +22,8 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -92,5 +97,25 @@ public class UserService {
         UserResponseDto userResponseDto = UserMapper.fromEntityToPersonalData(user);
         log.info("Get personal data for user with id: {} correct ", id);
         return userResponseDto;
+    }
+
+    public UserResponseDto updatePersonalData(long id, UserUpdateRequestDto dto) {
+        log.info("Update personal data for user with id: {} ", id);
+        User user = userRepository.findByIdOrThrowWhenIdNotExists(id);
+
+        Optional.ofNullable(dto.email()).ifPresent(user::setEmail);
+        Optional.ofNullable(dto.phoneNumber()).ifPresent(user::setPhoneNumber);
+
+        Optional.ofNullable(dto.address())
+                        .map(AddressMapper::fromRequest)
+                                .ifPresent(user::setAddress);
+
+        Optional.ofNullable(dto.identityCard())
+                        .map(IdentityCardMapper::fromRequest)
+                                .ifPresent(user::setIdentityCard);
+
+        User updateUser = userRepository.save(user);
+        log.info("Update personal data for user with id: {} correct ", id);
+        return  UserMapper.fromEntityToPersonalData(updateUser);
     }
 }
