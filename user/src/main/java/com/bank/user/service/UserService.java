@@ -76,7 +76,8 @@ public class UserService {
     public void validateEmailNadNationalNumber(UserRequestDto dto) {
         if (userRepository.findByEmail(dto.email()).isPresent()) {
             log.warn("Validation: email already exists for user with email: {} ", dto.email());
-            throw new UserAlreadyException("User with this email: " + dto.email() + " already exists", HttpStatus.CONFLICT);
+            throw new UserAlreadyException(
+                    "User with this email: " + dto.email() + " already exists", HttpStatus.CONFLICT);
         }
 
         if (!nationalNumberValidator.passed(dto)) {
