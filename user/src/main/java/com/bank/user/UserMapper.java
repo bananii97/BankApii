@@ -2,7 +2,7 @@ package com.bank.user;
 
 import com.bank.address.AddressMapper;
 import com.bank.identity_card.IdentityCardMapper;
-import com.bank.user.jpa.User;
+import com.bank.user.jpa.model.User;
 import com.bank.user.jpa.dto.UserRequestDto;
 import com.bank.user.jpa.dto.UserResponseDto;
 import lombok.experimental.UtilityClass;

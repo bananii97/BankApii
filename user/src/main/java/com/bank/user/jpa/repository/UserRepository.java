@@ -1,8 +1,8 @@
-package com.bank.user.jpa;
+package com.bank.user.jpa.repository;
 
 import com.bank.exceptions.EmailNotFoundExceptions;
 import com.bank.exceptions.UserNotFoundException;
-import jakarta.persistence.EntityNotFoundException;
+import com.bank.user.jpa.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Repository;

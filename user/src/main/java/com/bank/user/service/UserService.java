@@ -10,8 +10,10 @@ import com.bank.exceptions.UserAlreadyException;
 import com.bank.user.UserMapper;
 import com.bank.user.enums.Gender;
 import com.bank.user.enums.UserStatus;
-import com.bank.user.jpa.User;
-import com.bank.user.jpa.UserRepository;
+import com.bank.user.jpa.model.User;
+import com.bank.user.jpa.model.UserDataHistory;
+import com.bank.user.jpa.repository.UserDataHistoryRepository;
+import com.bank.user.jpa.repository.UserRepository;
 import com.bank.user.jpa.dto.UserRequestDto;
 import com.bank.user.jpa.dto.UserResponseDto;
 import com.bank.user.jpa.dto.UserUpdateRequestDto;
@@ -23,6 +25,8 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -33,6 +37,8 @@ public class UserService {
     private final UserRepository userRepository;
     private final NationalNumberValidator nationalNumberValidator;
     private final RabbitTemplate rabbitTemplate;
+    private final UserDataHistory userDataHistory;
+    private final UserDataHistoryRepository userDataHistoryRepository;
 
     @Transactional
     public RegistrationResponseDto registry(UserRequestDto dto) {
@@ -45,7 +51,7 @@ public class UserService {
 
         userRepository.save(user);
 
-        UserRegisteredEvent event = new  UserRegisteredEvent(user.getEmail());
+        UserRegisteredEvent event = new UserRegisteredEvent(user.getEmail());
         rabbitTemplate.convertAndSend(
                 RabbitMqUserConfig.EXCHANGE_NAME,
                 RabbitMqUserConfig.ROUTING_USER_REGISTERED,
@@ -70,7 +76,7 @@ public class UserService {
         String email = "email: " + user.getEmail();
         UserStatus status = UserStatus.PENDING_VERIFICATION;
         String message = "A verification code has been sent to the email address provided.";
-        return new RegistrationResponseDto(email,status,message);
+        return new RegistrationResponseDto(email, status, message);
     }
 
     public Gender checkGender(String nationalNumber) {
@@ -91,7 +97,7 @@ public class UserService {
         }
     }
 
-    public UserResponseDto getPersonalData(long id){
+    public UserResponseDto getPersonalData(long id) {
         log.info("Get personal data for user with id: {} ", id);
         User user = userRepository.findByIdOrThrowWhenIdNotExists(id);
         UserResponseDto userResponseDto = UserMapper.fromEntityToPersonalData(user);
@@ -99,6 +105,7 @@ public class UserService {
         return userResponseDto;
     }
 
+    @Transactional
     public UserResponseDto updatePersonalData(long id, UserUpdateRequestDto dto) {
         log.info("Update personal data for user with id: {} ", id);
         User user = userRepository.findByIdOrThrowWhenIdNotExists(id);
@@ -106,16 +113,24 @@ public class UserService {
         Optional.ofNullable(dto.email()).ifPresent(user::setEmail);
         Optional.ofNullable(dto.phoneNumber()).ifPresent(user::setPhoneNumber);
 
+
+
         Optional.ofNullable(dto.address())
-                        .map(AddressMapper::fromRequest)
-                                .ifPresent(user::setAddress);
+                .map(AddressMapper::fromRequest)
+                .ifPresent(user::setAddress);
 
         Optional.ofNullable(dto.identityCard())
-                        .map(IdentityCardMapper::fromRequest)
-                                .ifPresent(user::setIdentityCard);
+                .map(IdentityCardMapper::fromRequest)
+                .ifPresent(user::setIdentityCard);
 
         User updateUser = userRepository.save(user);
+
+
         log.info("Update personal data for user with id: {} correct ", id);
-        return  UserMapper.fromEntityToPersonalData(updateUser);
+        return UserMapper.fromEntityToPersonalData(updateUser);
+    }
+
+    public void saveFieldChanges(UserRequestDto dto) {
+
     }
 }
