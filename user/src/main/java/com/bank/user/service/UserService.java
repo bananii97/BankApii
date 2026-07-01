@@ -113,8 +113,6 @@ public class UserService {
         Optional.ofNullable(dto.email()).ifPresent(user::setEmail);
         Optional.ofNullable(dto.phoneNumber()).ifPresent(user::setPhoneNumber);
 
-
-
         Optional.ofNullable(dto.address())
                 .map(AddressMapper::fromRequest)
                 .ifPresent(user::setAddress);
@@ -124,7 +122,6 @@ public class UserService {
                 .ifPresent(user::setIdentityCard);
 
         User updateUser = userRepository.save(user);
-
 
         log.info("Update personal data for user with id: {} correct ", id);
         return UserMapper.fromEntityToPersonalData(updateUser);
