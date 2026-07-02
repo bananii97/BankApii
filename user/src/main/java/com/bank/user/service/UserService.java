@@ -12,6 +12,7 @@ import com.bank.exceptions.UserAlreadyException;
 import com.bank.user.UserMapper;
 import com.bank.user.enums.Gender;
 import com.bank.user.enums.UserStatus;
+import com.bank.user.jpa.model.FieldChangeRequest;
 import com.bank.user.jpa.model.User;
 import com.bank.user.jpa.model.UserDataHistory;
 import com.bank.user.jpa.repository.UserDataHistoryRepository;
@@ -21,12 +22,16 @@ import com.bank.user.jpa.dto.UserResponseDto;
 import com.bank.user.jpa.dto.UserUpdateRequestDto;
 import com.bank.verification.NationalNumberValidator;
 import jakarta.transaction.Transactional;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -123,18 +128,26 @@ public class UserService {
 
         User updateUser = userRepository.save(user);
 
+        saveFieldChanges(AddressMapper.getChange(user.getAddress(),dto.address()),user.getId());
+
         log.info("Update personal data for user with id: {} correct ", id);
         return UserMapper.fromEntityToPersonalData(updateUser);
     }
 
-    public void saveFieldChanges(UserRequestDto dto) {
+    public void saveFieldChanges(List<FieldChangeRequest> fieldChanges, Long userId) {
+        if(!fieldChanges.isEmpty()) {
+            fieldChanges
+                    .forEach(changes -> {
+                        UserDataHistory personalData = UserDataHistory.builder()
+                                .fieldName(changes.fieldName())
+                                .newValue(changes.newValue())
+                                .oldValue(changes.oldValue())
+                                .changedAt(LocalDateTime.now())
+                                .userId(userId)
+                                .build();
 
-    }
-
-    public void updateAddress(AddressRequestDto dto) {
-        List<>
-        if(dto != null) {
-
+                        userDataHistoryRepository.save(personalData);
+                    });
         }
     }
 }
