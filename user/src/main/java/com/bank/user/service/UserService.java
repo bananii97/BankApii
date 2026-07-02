@@ -1,6 +1,8 @@
 package com.bank.user.service;
 
+import com.bank.address.Address;
 import com.bank.address.AddressMapper;
+import com.bank.address.dto.AddressRequestDto;
 import com.bank.identity_card.IdentityCardMapper;
 import com.bank.rabbit.RegistrationResponseDto;
 import com.bank.UserRegisteredEvent;
@@ -25,8 +27,6 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -129,5 +129,12 @@ public class UserService {
 
     public void saveFieldChanges(UserRequestDto dto) {
 
+    }
+
+    public void updateAddress(AddressRequestDto dto) {
+        List<>
+        if(dto != null) {
+
+        }
     }
 }
