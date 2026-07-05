@@ -1,8 +1,6 @@
 package com.bank.user.service;
 
-import com.bank.address.Address;
 import com.bank.address.AddressMapper;
-import com.bank.address.dto.AddressRequestDto;
 import com.bank.identity_card.IdentityCardMapper;
 import com.bank.rabbit.RegistrationResponseDto;
 import com.bank.UserRegisteredEvent;
@@ -22,14 +20,12 @@ import com.bank.user.jpa.dto.UserResponseDto;
 import com.bank.user.jpa.dto.UserUpdateRequestDto;
 import com.bank.verification.NationalNumberValidator;
 import jakarta.transaction.Transactional;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -128,14 +124,20 @@ public class UserService {
 
         User updateUser = userRepository.save(user);
 
-        saveFieldChanges(AddressMapper.getChange(user.getAddress(),dto.address()),user.getId());
+        saveFiledChanges(user.getId(), user, dto);
 
         log.info("Update personal data for user with id: {} correct ", id);
         return UserMapper.fromEntityToPersonalData(updateUser);
     }
 
-    public void saveFieldChanges(List<FieldChangeRequest> fieldChanges, Long userId) {
-        if(!fieldChanges.isEmpty()) {
+    private void saveFiledChanges(Long userId, User user, UserUpdateRequestDto dto) {
+        saveNewAndOldField(UserMapper.getChanges(user,dto), userId);
+        saveNewAndOldField(AddressMapper.getChange(user.getAddress(), dto.address()), userId);
+        saveNewAndOldField(IdentityCardMapper.getChanges(user.getIdentityCard(), dto.identityCard()), userId);
+    }
+
+    private void saveNewAndOldField(List<FieldChangeRequest> fieldChanges, Long userId) {
+        if (!fieldChanges.isEmpty()) {
             fieldChanges
                     .forEach(changes -> {
                         UserDataHistory personalData = UserDataHistory.builder()
