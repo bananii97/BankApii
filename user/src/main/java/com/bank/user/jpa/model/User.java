@@ -1,4 +1,4 @@
-package com.bank.user.jpa;
+package com.bank.user.jpa.model;
 
 import com.bank.address.Address;
 import com.bank.base.AuditableEntity;
