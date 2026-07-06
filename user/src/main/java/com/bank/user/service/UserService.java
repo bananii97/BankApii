@@ -74,7 +74,7 @@ public class UserService {
     }
 
     public RegistrationResponseDto returnRegistrationResponseDto(User user) {
-        String email = "email: " + user.getEmail();
+        String email = user.getEmail();
         UserStatus status = UserStatus.PENDING_VERIFICATION;
         String message = "A verification code has been sent to the email address provided.";
         return new RegistrationResponseDto(email, status, message);

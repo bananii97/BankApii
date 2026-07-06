@@ -4,9 +4,11 @@ import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import lombok.Builder;
 
 import java.time.LocalDate;
 
+@Builder
 public record IdentityCardRequestDto(
         @Pattern(regexp = "^[A-Za-z]{3}\\d{6}$", message = "incorrect code from ID card")
         String identityCardNumber,
