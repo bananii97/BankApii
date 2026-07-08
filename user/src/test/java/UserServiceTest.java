@@ -1,6 +1,9 @@
 import com.bank.UserRegisteredEvent;
 import com.bank.address.Address;
 import com.bank.address.dto.AddressRequestDto;
+import com.bank.exceptions.EmailNotFoundExceptions;
+import com.bank.exceptions.InvalidNationalNumberExceptions;
+import com.bank.exceptions.UserAlreadyException;
 import com.bank.identity_card.IdentityCard;
 import com.bank.identity_card.dto.IdentityCardRequestDto;
 import com.bank.rabbit.RegistrationResponseDto;
@@ -21,11 +24,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.http.HttpStatus;
 
 import java.time.LocalDate;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -55,6 +60,9 @@ public class UserServiceTest {
     private static IdentityCardRequestDto identityCard;
     private static UserRequestDto dto;
     private static RegistrationResponseDto responseDto;
+
+    private static final String EXCHANGE_NAME = "bank-events-exchange";
+    private static final String ROUTING_USER_REGISTERED = "user.registered";
 
     private static final Long USER_ID = 1L;
     private static final String EMAIL = "test@gamil.com";
@@ -90,6 +98,7 @@ public class UserServiceTest {
                 .nationalNumber(NATIONAL_NUMBER)
                 .birthDate(BIRTH_DATE)
                 .phoneNumber(PHONE_NUMBER)
+                .status(UserStatus.PENDING_VERIFICATION)
                 .build();
 
         dto = UserRequestDto.builder()
@@ -129,6 +138,13 @@ public class UserServiceTest {
         verify(nationalNumberValidator, times(1)).passed(dto);
         verify(userRepository, times(1)).findByEmail(EMAIL);
 
+        ArgumentCaptor<UserRegisteredEvent> eventCaptor = ArgumentCaptor.forClass(UserRegisteredEvent.class);
+        verify(rabbitTemplate, times(1))
+                .convertAndSend(
+                        eq(EXCHANGE_NAME),
+                        eq(ROUTING_USER_REGISTERED),
+                        eventCaptor.capture());
+
         assertThat(createdUser.getEmail()).isEqualTo(EMAIL);
         assertThat(createdUser.getFirstName()).isEqualTo(FIRST_NAME);
         assertThat(createdUser.getLastName()).isEqualTo(LAST_NAME);
@@ -136,5 +152,69 @@ public class UserServiceTest {
         assertThat(responseDto.email()).isEqualTo(EMAIL);
         assertThat(responseDto.message()).isEqualTo(MESSAGE);
         assertThat(responseDto.status()).isEqualTo(USER_STATUS);
+    }
+
+    @Test
+    void shouldThrowUserAlreadyException_whenUserExists(){
+        //given
+        String message = "User with this email: " + EMAIL + " already exists";
+        when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(user));
+
+        assertThatExceptionOfType(UserAlreadyException.class)
+                .isThrownBy(() -> userService.registry(dto))
+                .withMessageContaining(message);
+
+        //when then
+        verify(nationalNumberValidator, never()).passed(dto);
+        verify(userRepository, times(1)).findByEmail(EMAIL);
+        verify(userRepository, never()).save(any(User.class));
+        verifyNoInteractions(userRegisteredEvent);
+    }
+
+    @Test
+    void shouldThrowInvalidNationalNumberException_whenNumberIsInCorrect() {
+        //given
+        String message = "National number is incorrect";
+        when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.empty());
+
+        assertThatExceptionOfType(InvalidNationalNumberExceptions.class)
+                .isThrownBy(() -> userService.registry(dto))
+                .withMessageContaining(message);
+
+        //when then
+        verify(userRepository, times(1)).findByEmail(EMAIL);
+        verify(userRepository, never()).save(any(User.class));
+        verifyNoInteractions(userRegisteredEvent);
+    }
+
+    @Test
+    void shouldActivateUser_whenEmailExists() {
+        //given
+        UserStatus status = UserStatus.ACTIVE;
+        when(userRepository.findByEmailOrThrowWhenEmailNotExists(EMAIL))
+                .thenReturn(user);
+
+        //when
+        userService.activateUser(EMAIL);
+
+        //then
+        verify(userRepository, times(1)).findByEmailOrThrowWhenEmailNotExists(EMAIL);
+        assertThat(user.getStatus()).isEqualTo(status);
+    }
+
+    @Test
+    void shouldThrowEmailNotFoundException_whenEmailNotExists() {
+        //given
+        String message = "Email: " + EMAIL + " not found.";
+        when(userRepository.findByEmailOrThrowWhenEmailNotExists(EMAIL))
+                .thenThrow(new EmailNotFoundExceptions(message, HttpStatus.NOT_FOUND));
+
+        //when then
+        assertThatExceptionOfType(EmailNotFoundExceptions.class)
+                .isThrownBy(() -> userService.activateUser(EMAIL))
+                .withMessageContaining(message);
+
+        verify(userRepository, times(1)).findByEmailOrThrowWhenEmailNotExists(EMAIL);
+        verify(userRepository, never()).save(any(User.class));
     }
 }
