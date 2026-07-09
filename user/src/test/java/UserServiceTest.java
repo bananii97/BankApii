@@ -88,7 +88,7 @@ public class UserServiceTest {
                 .identityCardNumber("ABC123456")
                 .issuePlace("Wasaw")
                 .issuingAuthority("President")
-                .validUtil(LocalDate.of(2028,1,1))
+                .validUtil(LocalDate.of(2028, 1, 1))
                 .build();
 
         user = User.builder()
@@ -119,7 +119,7 @@ public class UserServiceTest {
     }
 
     @Test
-    void shouldRegistryUserAndReturnResponseDto_whenAllValuesAreProvided(){
+    void shouldRegistryUserAndReturnResponseDto_whenAllValuesAreProvided() {
         //given
         when(nationalNumberValidator.passed(dto)).thenReturn(true);
         when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.empty());
@@ -134,7 +134,7 @@ public class UserServiceTest {
 
         //then
         verify(userRepository, times(1)).save(argumentCaptor.capture());
-        User createdUser =  argumentCaptor.getValue();
+        User createdUser = argumentCaptor.getValue();
         verify(nationalNumberValidator, times(1)).passed(dto);
         verify(userRepository, times(1)).findByEmail(EMAIL);
 
@@ -155,7 +155,7 @@ public class UserServiceTest {
     }
 
     @Test
-    void shouldThrowUserAlreadyException_whenUserExists(){
+    void shouldThrowUserAlreadyException_whenUserExists() {
         //given
         String message = "User with this email: " + EMAIL + " already exists";
         when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(user));
@@ -176,6 +176,7 @@ public class UserServiceTest {
         //given
         String message = "National number is incorrect";
         when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.empty());
+        when(nationalNumberValidator.passed(dto)).thenReturn(false);
 
         assertThatExceptionOfType(InvalidNationalNumberExceptions.class)
                 .isThrownBy(() -> userService.registry(dto))
@@ -184,6 +185,7 @@ public class UserServiceTest {
         //when then
         verify(userRepository, times(1)).findByEmail(EMAIL);
         verify(userRepository, never()).save(any(User.class));
+        verify(nationalNumberValidator, times(1)).passed(dto);
         verifyNoInteractions(userRegisteredEvent);
     }
 
@@ -216,5 +218,80 @@ public class UserServiceTest {
 
         verify(userRepository, times(1)).findByEmailOrThrowWhenEmailNotExists(EMAIL);
         verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void shouldReturnRegistrationResponseDto_whenAllValuesAreProvided() {
+        //given
+        String message = "A verification code has been sent to the email address provided.";
+
+        //when
+        RegistrationResponseDto response = userService.returnRegistrationResponseDto(user);
+
+        //then
+        assertThat(response.status()).isEqualTo(USER_STATUS);
+        assertThat(response.message()).isEqualTo(message);
+        assertThat(response.email()).isEqualTo(EMAIL);
+    }
+
+    @Test
+    void shouldReturnGenderFemale_whenNationalNumberIsProvided() {
+        //when
+        Gender returnedGender = userService.returnGender(NATIONAL_NUMBER);
+
+        //then
+        assertThat(returnedGender).isEqualTo(Gender.MALE);
+    }
+
+    @Test
+    void shouldReturnGenderMale_whenNationalNumberIsProvided() {
+        //given
+        String nationalNumber = "98020176522";
+
+        //when
+        Gender returnedGender = userService.returnGender(nationalNumber);
+
+        //then
+        assertThat(returnedGender).isEqualTo(Gender.FEMALE);
+    }
+
+    @Test
+    void shouldValidateEmailUniquesPass_whenEmailNotExists() {
+        //given
+        when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.empty());
+
+        //when
+        userService.validateEmailUniques(dto);
+
+        //then
+        verify(userRepository, times(1)).findByEmail(EMAIL);
+    }
+
+    @Test
+    void shouldThrowUserAlreadyException_whenEmailExists() {
+        //given
+        String message = "User with this email: " + EMAIL + " already exists";
+        when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(user));
+
+        assertThatExceptionOfType(UserAlreadyException.class)
+                .isThrownBy(() -> userService.validateEmailUniques(dto))
+                .withMessageContaining(message);
+
+        //when then
+        verify(userRepository, times(1)).findByEmail(EMAIL);
+    }
+
+    @Test
+    void shouldThrowInvalidNationalNumberException_whenNationalNumberIsInCorrect() {
+        //given
+        String message = "National number is incorrect";
+        when(nationalNumberValidator.passed(dto)).thenReturn(false);
+
+        assertThatExceptionOfType(InvalidNationalNumberExceptions.class)
+                .isThrownBy(() -> userService.validateNationalNumber(dto))
+                .withMessageContaining(message);
+
+        //when then
+        verify(nationalNumberValidator, times(1)).passed(dto);
     }
 }

@@ -45,10 +45,11 @@ public class UserService {
     public RegistrationResponseDto registry(UserRequestDto dto) {
         log.info("Validation: process starting for user with email: {}", dto.email());
         User user = UserMapper.fromRequest(dto);
-        user.setGender(checkGender(dto.nationalNumber()));
+        user.setGender(returnGender(dto.nationalNumber()));
 
         user.setStatus(UserStatus.PENDING_VERIFICATION);
-        validateEmailNadNationalNumber(dto);
+        validateEmailUniques(dto);
+        validateNationalNumber(dto);
 
         userRepository.save(user);
 
@@ -80,22 +81,26 @@ public class UserService {
         return new RegistrationResponseDto(email, status, message);
     }
 
-    public Gender checkGender(String nationalNumber) {
+    public Gender returnGender(String nationalNumber) {
         int genderDigit = nationalNumber.charAt(9);
         return (genderDigit % 2 == 0) ? Gender.FEMALE : Gender.MALE;
     }
 
-    public void validateEmailNadNationalNumber(UserRequestDto dto) {
+    public void validateEmailUniques(UserRequestDto dto) {
         if (userRepository.findByEmail(dto.email()).isPresent()) {
             log.warn("Validation: email already exists for user with email: {} ", dto.email());
             throw new UserAlreadyException(
                     "User with this email: " + dto.email() + " already exists", HttpStatus.CONFLICT);
         }
+        log.info("Validation passed: email not exists: {} ", dto.email());
+    }
 
+    public void validateNationalNumber(UserRequestDto dto) {
         if (!nationalNumberValidator.passed(dto)) {
             log.warn("Validation: national number is incorrect");
             throw new InvalidNationalNumberExceptions("National number is incorrect", HttpStatus.BAD_REQUEST);
         }
+        log.info("Validation passed: national number is correct");
     }
 
     public UserResponseDto getPersonalData(long id) {
