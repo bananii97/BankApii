@@ -4,12 +4,15 @@ import com.bank.address.dto.AddressRequestDto;
 import com.bank.exceptions.EmailNotFoundExceptions;
 import com.bank.exceptions.InvalidNationalNumberExceptions;
 import com.bank.exceptions.UserAlreadyException;
+import com.bank.exceptions.UserNotFoundException;
 import com.bank.identity_card.IdentityCard;
 import com.bank.identity_card.dto.IdentityCardRequestDto;
 import com.bank.rabbit.RegistrationResponseDto;
+import com.bank.user.UserMapper;
 import com.bank.user.enums.Gender;
 import com.bank.user.enums.UserStatus;
 import com.bank.user.jpa.dto.UserRequestDto;
+import com.bank.user.jpa.dto.UserResponseDto;
 import com.bank.user.jpa.model.User;
 import com.bank.user.jpa.repository.UserRepository;
 import com.bank.user.service.UserService;
@@ -92,6 +95,7 @@ public class UserServiceTest {
                 .build();
 
         user = User.builder()
+                .id(USER_ID)
                 .email(EMAIL)
                 .firstName(FIRST_NAME)
                 .lastName(LAST_NAME)
@@ -293,5 +297,35 @@ public class UserServiceTest {
 
         //when then
         verify(nationalNumberValidator, times(1)).passed(dto);
+    }
+
+    @Test
+    void shouldReturnPersonalData_whenUserExists(){
+        //given
+        when(userRepository.findByIdOrThrowWhenIdNotExists(USER_ID)).thenReturn(user);
+
+        //when
+        UserResponseDto userResponse = userService.getPersonalData(USER_ID);
+
+        //then
+        assertThat(user.getId()).isEqualTo(USER_ID);
+        verify(userRepository, times(1)).findByIdOrThrowWhenIdNotExists(USER_ID);
+    }
+
+    @Test
+    void shouldThrowUserNotFoundException_whenUserNotExist(){
+        //given
+        Long userId = 999L;
+        String message = "User with id: " + userId + " not found";
+        when(userRepository.findByIdOrThrowWhenIdNotExists(userId))
+                .thenThrow(new UserNotFoundException(message, HttpStatus.NOT_FOUND));
+
+        //when
+        assertThatExceptionOfType(UserNotFoundException.class)
+                .isThrownBy(() -> userService.getPersonalData(userId))
+                .withMessageContaining(message);
+
+        //then
+        verify(userRepository, times(1)).findByIdOrThrowWhenIdNotExists(userId);
     }
 }
