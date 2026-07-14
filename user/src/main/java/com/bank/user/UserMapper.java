@@ -31,12 +31,15 @@ public class UserMapper {
 
     public static UserResponseDto fromEntityToPersonalData(User user){
         return UserResponseDto.builder()
+                .id(user.getId())
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
                 .email(user.getEmail())
                 .phoneNumber(user.getPhoneNumber())
                 .birthDate(user.getBirthDate())
                 .gender(user.getGender())
+                .addressDto(AddressMapper.toResponse(user.getAddress()))
+                .identityCardDto(IdentityCardMapper.toResponse(user.getIdentityCard()))
                 .build();
     }
 
