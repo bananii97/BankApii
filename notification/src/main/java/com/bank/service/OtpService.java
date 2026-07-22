@@ -3,10 +3,7 @@ package com.bank.service;
 import com.bank.OtpVerifiedEvent;
 import com.bank.email.EmailSender;
 import com.bank.enums.OtpType;
-import com.bank.exceptions.CodeExpiredException;
-import com.bank.exceptions.InvalidOtpException;
-import com.bank.exceptions.OtpFailedAttemptsExceptions;
-import com.bank.exceptions.OtpUsedException;
+import com.bank.exceptions.*;
 import com.bank.jpa.OneTimePassword;
 import com.bank.jpa.OtpRepository;
 import com.bank.jpa.dto.VerifyOtpRequest;
@@ -32,6 +29,10 @@ public class OtpService {
     private final EmailSender emailSender;
 
     public void generateAndSendOtp(String email) {
+        if(email == null || email.isEmpty()) {
+            throw new EmailIncorrectException("Email is null or empty", HttpStatus.BAD_REQUEST);
+        }
+
         int code = 100000 + secureRandom.nextInt(900000);
         String stringCode = String.valueOf(code);
         LocalDateTime createdAt = LocalDateTime.now();
@@ -46,8 +47,6 @@ public class OtpService {
                 .build();
 
         emailSender.sendMail(email,"a",String.valueOf(code));
-
-
         otpRepository.save(otp);
     }
 

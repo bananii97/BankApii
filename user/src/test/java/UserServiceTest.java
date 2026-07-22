@@ -8,16 +8,16 @@ import com.bank.exceptions.UserNotFoundException;
 import com.bank.identity_card.IdentityCard;
 import com.bank.identity_card.dto.IdentityCardRequestDto;
 import com.bank.rabbit.RegistrationResponseDto;
-import com.bank.user.UserMapper;
 import com.bank.user.enums.Gender;
 import com.bank.user.enums.UserStatus;
 import com.bank.user.jpa.dto.UserRequestDto;
 import com.bank.user.jpa.dto.UserResponseDto;
+import com.bank.user.jpa.dto.UserUpdateRequestDto;
 import com.bank.user.jpa.model.User;
+import com.bank.user.jpa.repository.UserDataHistoryRepository;
 import com.bank.user.jpa.repository.UserRepository;
 import com.bank.user.service.UserService;
 import com.bank.verification.NationalNumberValidator;
-import net.bytebuddy.build.HashCodeAndEqualsPlugin;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,8 +32,7 @@ import org.springframework.http.HttpStatus;
 import java.time.LocalDate;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -45,6 +44,9 @@ public class UserServiceTest {
 
     @Mock
     private UserRegisteredEvent userRegisteredEvent;
+
+    @Mock
+    private UserDataHistoryRepository userDataHistoryRepository;
 
     @Mock
     private RabbitTemplate rabbitTemplate;
@@ -59,8 +61,10 @@ public class UserServiceTest {
     private ArgumentCaptor<User> argumentCaptor;
 
     private static User user;
-    private static AddressRequestDto address;
-    private static IdentityCardRequestDto identityCard;
+    private static Address address;
+    private static IdentityCard identityCard;
+    private static AddressRequestDto addressRequest;
+    private static IdentityCardRequestDto identityCardRequest;
     private static UserRequestDto dto;
     private static RegistrationResponseDto responseDto;
 
@@ -80,14 +84,28 @@ public class UserServiceTest {
 
     @BeforeAll
     static void beforeAll() {
-        address = AddressRequestDto.builder()
+        address = Address.builder()
+                .city("New York")
+                .street("Newas")
+                .postalCode("11-220")
+                .apartmentNumber("12")
+                .build();
+
+        identityCard = IdentityCard.builder()
+                .identityCardNumber("ABA323456")
+                .issuePlace("Lubin")
+                .issuingAuthority("President")
+                .validUtil(LocalDate.of(2026, 1, 1))
+                .build();
+
+        addressRequest = AddressRequestDto.builder()
                 .city("Warsaw")
                 .street("New")
                 .postalCode("12-120")
                 .apartmentNumber("12")
                 .build();
 
-        identityCard = IdentityCardRequestDto.builder()
+        identityCardRequest = IdentityCardRequestDto.builder()
                 .identityCardNumber("ABC123456")
                 .issuePlace("Wasaw")
                 .issuingAuthority("President")
@@ -103,6 +121,8 @@ public class UserServiceTest {
                 .birthDate(BIRTH_DATE)
                 .phoneNumber(PHONE_NUMBER)
                 .status(UserStatus.PENDING_VERIFICATION)
+                .address(address)
+                .identityCard(identityCard)
                 .build();
 
         dto = UserRequestDto.builder()
@@ -111,11 +131,11 @@ public class UserServiceTest {
                 .email(EMAIL)
                 .password("pass")
                 .nationalNumber(NATIONAL_NUMBER)
-                .birthDate(LocalDate.now().minusYears(25)) // Data z przeszłości
+                .birthDate(LocalDate.now().minusYears(25))
                 .phoneNumber(PHONE_NUMBER)
                 .gender(GENDER)
-                .address(address)
-                .identityCard(identityCard)
+                .address(addressRequest)
+                .identityCard(identityCardRequest)
                 .build();
 
         responseDto = new RegistrationResponseDto(EMAIL, USER_STATUS, MESSAGE);
@@ -302,13 +322,14 @@ public class UserServiceTest {
     @Test
     void shouldReturnPersonalData_whenUserExists(){
         //given
+        user.setId(USER_ID);
         when(userRepository.findByIdOrThrowWhenIdNotExists(USER_ID)).thenReturn(user);
 
         //when
         UserResponseDto userResponse = userService.getPersonalData(USER_ID);
 
         //then
-        assertThat(user.getId()).isEqualTo(USER_ID);
+        assertThat(userResponse.id()).isEqualTo(USER_ID);
         verify(userRepository, times(1)).findByIdOrThrowWhenIdNotExists(USER_ID);
     }
 
@@ -327,5 +348,47 @@ public class UserServiceTest {
 
         //then
         verify(userRepository, times(1)).findByIdOrThrowWhenIdNotExists(userId);
+    }
+
+    @Test
+    void shouldUpdatePersonalData_whenDtoValuesIsProvided() {
+        //given
+        String newEmail = "newEmail";
+        String newPhoneNumber = "908890786";
+        AddressRequestDto addressDto = AddressRequestDto.builder()
+                .city("Kracow")
+                .street("Old")
+                .postalCode("11-120")
+                .apartmentNumber("11")
+                .build();
+
+        IdentityCardRequestDto identityCardDto = IdentityCardRequestDto.builder()
+                .identityCardNumber("DSA@!#@!#")
+                .issuePlace("Krakow")
+                .issuingAuthority("President")
+                .validUtil(LocalDate.of(2029, 1, 1))
+                .build();
+
+        UserUpdateRequestDto updateUser =
+                new UserUpdateRequestDto(newEmail,newPhoneNumber, addressDto, identityCardDto);
+        when(userRepository.findByIdOrThrowWhenIdNotExists(USER_ID)).thenReturn(user);
+        when(userRepository.save(any(User.class))).thenReturn(user);
+
+        //when
+        UserResponseDto userResponse = userService.updatePersonalData(USER_ID,updateUser);
+
+        //then
+        verify(userRepository, times(1)).findByIdOrThrowWhenIdNotExists(USER_ID);
+        verify(userRepository, times(1)).save(user);
+        assertThat(userResponse.email()).isEqualTo(newEmail);
+        assertThat(userResponse.phoneNumber()).isEqualTo(newPhoneNumber);
+        assertThat(userResponse.addressDto().city()).isEqualTo(addressDto.city());
+        assertThat(userResponse.addressDto().street()).isEqualTo(addressDto.street());
+        assertThat(userResponse.addressDto().postalCode()).isEqualTo(addressDto.postalCode());
+        assertThat(userResponse.addressDto().apartmentNumber()).isEqualTo(addressDto.apartmentNumber());
+        assertThat(userResponse.identityCardDto().identityCardNumber()).isEqualTo(identityCardDto.identityCardNumber());
+        assertThat(userResponse.identityCardDto().issuePlace()).isEqualTo(identityCardDto.issuePlace());
+        assertThat(userResponse.identityCardDto().issuingAuthority()).isEqualTo(identityCardDto.issuingAuthority());
+        assertThat(userResponse.identityCardDto().validUtil()).isEqualTo(identityCardDto.validUtil());
     }
 }
