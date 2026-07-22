@@ -66,7 +66,7 @@ public class OtpServiceTest {
         assertThat(otp.getEmail()).isEqualTo(EMAIL);
         assertThat(otp.getCreatedAt()).isBeforeOrEqualTo(LocalDateTime.now());
         assertThat(otp.getExpiresAt()).isAfter(expiryAt);
-        verify(emailSender).sendMail(EMAIL,anyString(),"223123");
+        verify(emailSender).sendMail(EMAIL,"a","223123");
     }
 
     @ParameterizedTest
