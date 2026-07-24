@@ -38,7 +38,6 @@ public class UserService {
     private final UserRepository userRepository;
     private final NationalNumberValidator nationalNumberValidator;
     private final RabbitTemplate rabbitTemplate;
-    private final UserDataHistory userDataHistory;
     private final UserDataHistoryRepository userDataHistoryRepository;
 
     @Transactional

@@ -21,6 +21,7 @@
         <module>user</module>
         <module>common</module>
         <module>notification</module>
+        <module>account</module>
     </modules>
 
     <properties>
